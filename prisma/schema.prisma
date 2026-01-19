@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  emailVerified Boolean  @default(false)
+  role          UserRole @default(USER)
+
+  subscription  Subscription?
+  animals       Animal[]
+
+  createdAt     DateTime @default(now())
+}
+
+model Plan {
+  id              String   @id @default(uuid())
+  name            String
+  priceCents      Int
+  animalLimit     Int
+  pagarmePlanId   String   @unique
+  active          Boolean  @default(true)
+
+  subscriptions   Subscription[]
+
+  createdAt       DateTime @default(now())
+}
+
+
+model Subscription {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  planId        String
+  pagarmeSubId  String?  @unique
+  status        SubscriptionStatus
+
+  user          User     @relation(fields: [userId], references: [id])
+  plan          Plan     @relation(fields: [planId], references: [id])
+
+  createdAt     DateTime @default(now())
+}
+
+model WebhookEvent {
+  id              String   @id @default(uuid())
+  pagarmeEventId  String   @unique
+  type            String
+  createdAt       DateTime @default(now())
+}
+
+
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+}
+
+model Animal {
+  id       String @id @default(uuid())
+  userId   String
+  name     String
+  imageUrl String
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+
